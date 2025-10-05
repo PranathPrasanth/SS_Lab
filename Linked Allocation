@@ -1,0 +1,42 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+struct Block{
+    int num;
+    struct Block *next;
+};
+
+int main(){
+    int i,val,n;
+    struct Block *head=NULL,*tail=NULL,*temp;
+    
+    printf("enter no of blocks : ");
+    scanf("%d",&n);
+    
+    for(i=0;i<n;i++){
+        printf("enter block %d : ",i+1);
+        scanf("%d",&val);
+        
+        temp=malloc(sizeof(struct Block));
+        temp->num=val;
+        temp->next=NULL;
+        if(!head){
+            head=tail=temp;
+        }
+        else{
+            tail=tail->next=temp;
+        }
+    }
+    
+    printf("Allocated blocks : ");
+    
+    for(temp=head;temp;temp=temp->next){
+        printf("%d -> ",temp->num);
+    }printf("NULL\n");
+    
+    while(head){
+        temp=head;
+        head=head->next;
+        free(temp);
+    }return 0;
+}
