@@ -1,0 +1,29 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int main(){
+    int i,n,curr,start,seek=0;
+    
+    printf("enter no of requests: ");
+    scanf("%d",&n);
+    
+    int req[n];
+    
+    for(i=0;i<n;i++){
+        printf("enter request[%d] : ",i+1);
+        scanf("%d",&req[i]);
+    }
+    
+    printf("enter start: ");
+    scanf("%d",&start);
+    
+    printf("Request sequence : %d",start);
+    curr=start;
+    for(i=0;i<n;i++){
+        seek+=abs(curr-req[i]);
+        curr=req[i];
+        printf(" -> %d",curr);
+    }
+    printf("\nSeek time : %d",seek);
+    return 0;
+}
