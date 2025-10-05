@@ -1,0 +1,23 @@
+#include <stdio.h>
+
+struct File{
+    char filename[20];
+    int startblock;
+    int noofblocks;
+};
+
+int main(){
+    struct File file1;
+    printf("enter starting block: ");
+    scanf("%d",&file1.startblock);
+    printf("enter no of blocks:");
+    scanf("%d",&file1.noofblocks);
+    
+    snprintf(file1.filename,sizeof(file1.filename),"file.txt");
+    printf("\nFile name:%s\n",file1.filename);
+    printf("\nAllocated : ");
+    for(int i=0;i<file1.noofblocks;i++){
+        printf("%d ",file1.startblock+i);
+    }
+    return 0;
+}
