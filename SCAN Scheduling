@@ -1,0 +1,74 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+int cmp(const void *a,const void *b){
+    return ((*(int*)a-*(int*)b));
+}
+
+int main(){
+    int n,j,size,head,curr,dir,seek=0,i=0;
+    
+    printf("enter no of requests : ");
+    scanf("%d",&n);
+    
+    int req[n];
+    
+    printf("Requests : ");
+    for(i=0;i<n;i++){
+        scanf("%d",&req[i]);
+    }
+    
+    qsort(req,n,sizeof(int),cmp);
+    
+    printf("enter head : ");
+    scanf("%d",&head);
+    
+    printf("enter disk size: ");
+    scanf("%d",&size);
+    
+    printf("enter direction (1:right,0:left) : ");
+    scanf("%d",&dir);
+    
+    while(i<n && req[i]<head){
+        i++;
+    }
+    
+    printf("Request sequence : %d",head);
+    curr=head;
+    if(dir==1){
+        for(j=i;j<n;j++){
+            seek+=abs(curr-req[j]);
+            curr=req[j];
+            printf(" -> %d",curr);
+        }
+        if(curr<size-1){
+            seek+=abs(curr-(size-1));
+            curr=size-1;
+            printf(" -> %d",curr);
+        }
+        for(j=i-1;j>=0;j--){
+            seek+=abs(curr-req[j]);
+            curr=req[j];
+            printf(" -> %d",curr);
+        }
+    }
+    else{
+        for(j=i-1;j>=0;j--){
+            seek+=abs(curr-req[j]);
+            curr=req[j];
+            printf(" -> %d",curr);
+        }
+        if(curr!=0){
+            seek+=abs(curr-0);
+            curr=0;
+            printf(" -> %d",curr);
+        }
+        for(j=i;j<n;j++){
+            seek+=abs(curr-req[j]);
+            curr=req[j];
+            printf(" -> %d",curr);
+        }
+    }printf("\nSeek time : %d",seek);
+    return 0;
+    
+}
