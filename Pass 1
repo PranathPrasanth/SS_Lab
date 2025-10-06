@@ -1,0 +1,67 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main(){
+    char label[10],opcode[10],operand[10],code[10],mnemonic[3];
+    int locctr,length,start=0;
+    FILE *inter,*symtab,*fin,*optab;
+    
+    fin=fopen("input.txt","r");
+    optab=fopen("optab.txt","r");
+    inter=fopen("intermediate.txt","w");
+    symtab=fopen("symtab.txt","w");
+    
+    fscanf(fin,"%s%s%s",label,opcode,operand);
+    
+    if(strcmp(opcode,"START")==0){
+        start=atoi(operand);
+        locctr=start;
+        fprintf(inter,"\t%s\t%s\t%s",label,opcode,operand);
+        fscanf(fin,"%s%s%s",label,opcode,operand);
+    }
+    while(strcmp(opcode,"END")!=0){
+        fprintf(inter,"%d\t%s\t%s\t%s",locctr,label,opcode,operand);
+        if(strcmp(label,"**")!=0){
+            fprintf(symtab,"%s\t%d",label,locctr);
+        }
+        rewind(optab);
+        while(fscanf(optab,"%s%s",code,mnemonic)!=EOF){
+            if(strcmp(opcode,code)==0){
+                locctr+=3;
+                break;
+            }
+        }
+        if(!strcmp(opcode,"WORD")){
+            locctr+=3;
+        }
+        else if(!strcmp(opcode,"RESW")){
+            locctr+=3*atoi(operand);
+        }
+        else if(!strcmp(opcode,"BYTE")){
+            locctr++;
+        }
+        else if(!strcmp(opcode,"RESB")){
+            locctr+=atoi(operand);
+        }fscanf(fin,"%s%s%s",label,opcode,operand);
+    }
+    fprintf(inter,"%d\t%s\t%s\t%s",locctr,label,opcode,operand);
+    length=locctr-start;
+    printf("Program length: %d",length);
+    
+    fclose(inter);fclose(symtab);fclose(fin);fclose(optab);
+    return 0;
+}
+
+Input.txt 
+** START 1000
+**   LDA ALPHA
+**   STA BETA
+ALPHA RESW 1
+BETA WORD  5
+**  END **
+
+Optab.txt
+LDA 33
+STA 44
+END 00
