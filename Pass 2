@@ -1,0 +1,98 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+int main() {
+    char addr[10], label[10], opcode[10], operand[10];
+    char mne[10], code[10], sym[10], symaddr[10];
+    int start=0,len,temp;
+    FILE *fp1=fopen("intermediate3.txt","r"),
+         *fp2=fopen("optab3.txt","r"),
+         *fp3=fopen("symtab3.txt","r"),
+         *fp4=fopen("asml.txt","w"),
+         *fp5=fopen("obj.txt","w"),
+         *fp6=fopen("length3.txt","r");
+    if(!fp1||!fp2||!fp3||!fp4||!fp5||!fp6){printf("File error\n");return 1;}
+
+    fscanf(fp6,"%d",&len);
+    fscanf(fp1,"%s%s%s%s",addr,label,opcode,operand);
+
+    if(!strcmp(opcode,"START")){
+        start=(int)strtol(operand,NULL,16);
+        fprintf(fp4,"%s\t%s\t%s\t%s\n",addr,label,opcode,operand);
+        fprintf(fp5,"H^%s^%06X^%06X\n",label,start,len);
+        fscanf(fp1,"%s%s%s%s",addr,label,opcode,operand);
+    }
+
+    char text[500]=""; int tlen=0;
+    while(strcmp(opcode,"END")){
+        int found=0; rewind(fp2);
+        while(fscanf(fp2,"%s%s",mne,code)!=EOF){
+            if(!strcmp(mne,opcode)){
+                found=1; rewind(fp3);
+                while(fscanf(fp3,"%s%s",sym,symaddr)!=EOF){
+                    if(!strcmp(sym,operand)){
+                        fprintf(fp4,"%s\t%s\t%s\t%s\t%s%s\n",addr,label,opcode,operand,code,symaddr);
+                        sprintf(text+strlen(text),"^%s%s",code,symaddr); tlen+=3;
+                        goto next;
+                    }
+                }
+                fprintf(fp4,"%s\t%s\t%s\t%s\t%s0000\n",addr,label,opcode,operand,code);
+                sprintf(text+strlen(text),"^%s0000",code); tlen+=3;
+                break;
+            }
+        }
+        if(!found){
+            if(!strcmp(opcode,"WORD")){
+                temp=atoi(operand);
+                fprintf(fp4,"%s\t%s\t%s\t%s\t%06X\n",addr,label,opcode,operand,temp);
+                sprintf(text+strlen(text),"^%06X",temp); tlen+=3;
+            }else if(!strcmp(opcode,"BYTE")){
+                char obj[50]="";
+                if(operand[0]=='C')
+                    for(int i=2;i<strlen(operand)-1;i++){char h[3];sprintf(h,"%02X",operand[i]);strcat(obj,h);}
+                else
+                    strncpy(obj,operand+2,strlen(operand)-3);
+                fprintf(fp4,"%s\t%s\t%s\t%s\t%s\n",addr,label,opcode,operand,obj);
+                sprintf(text+strlen(text),"^%s",obj);
+            }else
+                fprintf(fp4,"%s\t%s\t%s\t%s\n",addr,label,opcode,operand);
+        }
+        next: fscanf(fp1,"%s%s%s%s",addr,label,opcode,operand);
+    }
+
+    fprintf(fp5,"T^%06X^%02X%s\n",start,tlen,text);
+    fprintf(fp4,"%s\t%s\t%s\t%s\n",addr,label,opcode,operand);
+    fprintf(fp5,"E^%06X\n",start);
+    printf("PASS 2 done\n");
+
+    fclose(fp1);fclose(fp2);fclose(fp3);fclose(fp4);fclose(fp5);fclose(fp6);
+    return 0;
+}
+
+
+intermediate3.txt
+1000  COPY  START  1000
+1000  **    LDA    ALPHA
+1003  **    ADD    ONE
+1006  **    SUB    TWO
+1009  **    STA    BETA
+100C  ALPHA WORD   1
+100F  ONE   WORD   2
+1012  TWO   WORD   3
+1015  BETA  RESW   1
+1018  **    END    **
+
+
+optab3.txt
+LDA  00
+ADD  18
+SUB  1C
+STA  0C
+
+
+symtab3.txt
+ALPHA 100C
+ONE   100F
+TWO   1012
+BETA  1015
