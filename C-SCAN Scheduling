@@ -2,7 +2,7 @@
 #include <stdlib.h>
 
 int cmp(const void *a,const void *b){
-    return (*(int*)a-*(int*)b);
+    return (*(int*)a - *(int*)b);
 }
 
 int main(){
@@ -11,8 +11,7 @@ int main(){
     printf("enter no of requests : ");
     scanf("%d",&n);
     
-    int req[n];
-    int pos=n;
+    int req[n], pos = n;
     printf("Requests : ");
     for(i=0;i<n;i++){
         scanf("%d",&req[i]);
@@ -30,49 +29,51 @@ int main(){
     printf("Seek sequence : %d",head);
     
     for(i=0;i<n;i++){
-    if(req[i]>head){
-        pos=i;
-        break;
-    }}
-    if(dir==1){
-        for(j=pos;j<n;j++){
-            seek+=abs(head-req[j]);
-            head=req[j];
-            printf(" -> %d",head);
-        }
-        if(head<size-1){
-            seek+=abs(head-(size-1));
-            head=size-1;
-            printf(" -> %d",head);
-        }
-        head=0;
-        printf(" -> %d",head);
-        for(i=0;i<pos;i++){
-            seek+=abs(head-req[i]);
-            head=req[i];
-            printf(" -> %d",head);
+        if(req[i]>head){
+            pos=i;
+            break;
         }
     }
-    else{
+
+    if(dir==1){   // Move right
+        for(j=pos;j<n;j++){
+            seek += abs(head - req[j]);
+            head = req[j];
+            printf(" -> %d", head);
+        }
+        if(head < size-1){
+            seek += abs(head - (size - 1));
+            head = size - 1;
+            printf(" -> %d", head);
+        }
+        head = 0;
+        printf(" -> %d", head);
+        for(i=0;i<pos;i++){
+            seek += abs(head - req[i]);
+            head = req[i];
+            printf(" -> %d", head);
+        }
+    }
+    else{   // Move left
         for(j=pos-1;j>=0;j--){
-            seek+=abs(head-req[j]);
-            head=req[j];
-            printf(" -> %d",head);
+            seek += abs(head - req[j]);
+            head = req[j];
+            printf(" -> %d", head);
         }
-        if(head!=0){
-            seek+=abs(head-0);
-            head=0;
-            printf(" -> %d",head);
+        if(head != 0){
+            seek += abs(head - 0);
+            head = 0;
+            printf(" -> %d", head);
         }
-        seek+=abs(head-(size-1));
-        head=size-1;
-        printf(" -> %d",head);
-        for(i=n-1;i>=pos;i--){
-            seek+=abs(head-req[i]);
-            head=req[i];
-            printf(" -> %d",head);
+        head = size - 1;
+        printf(" -> %d", head);
+        for(i = n - 1; i >= pos; i--){
+            seek += abs(head - req[i]);
+            head = req[i];
+            printf(" -> %d", head);
         }
-    }printf("Seek time : %d",seek);
-    return 0;
+    }
     
+    printf("\nSeek time : %d", seek);
+    return 0;
 }
