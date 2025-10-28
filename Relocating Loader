@@ -1,0 +1,73 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+// Convert hex bitmask to binary
+void hexToBin(char hex[], char bin[]) {
+    bin[0] = '\0';
+    for (int i = 0; hex[i]; i++) {
+        switch (toupper(hex[i])) {
+            case '0': strcat(bin, "0000"); break;  case '1': strcat(bin, "0001"); break;
+            case '2': strcat(bin, "0010"); break;  case '3': strcat(bin, "0011"); break;
+            case '4': strcat(bin, "0100"); break;  case '5': strcat(bin, "0101"); break;
+            case '6': strcat(bin, "0110"); break;  case '7': strcat(bin, "0111"); break;
+            case '8': strcat(bin, "1000"); break;  case '9': strcat(bin, "1001"); break;
+            case 'A': strcat(bin, "1010"); break;  case 'B': strcat(bin, "1011"); break;
+            case 'C': strcat(bin, "1100"); break;  case 'D': strcat(bin, "1101"); break;
+            case 'E': strcat(bin, "1110"); break;  case 'F': strcat(bin, "1111"); break;
+        }
+    }
+}
+
+int main() {
+    FILE *fp = fopen("object_code.txt", "r");
+    if (!fp) { printf("File not found\n"); return 1; }
+
+    char line[100];
+    int actualStart, progStart = 0, relocation = 0;
+
+    printf("Enter actual starting address: ");
+    scanf("%x", &actualStart);
+
+    while (fgets(line, sizeof(line), fp)) {
+
+        if (line[0] == 'H') {
+            char name[20], start[10], len[10];
+            sscanf(line, "H^%[^^]^%[^^]^%s", name, start, len);
+            progStart = strtol(start, NULL, 16);
+            relocation = actualStart - progStart;
+            printf("Program: %s  Start: %s  Length: %s\n", name, start, len);
+        }
+
+        else if (line[0] == 'T') {
+            char start[10], len[10], mask[10], obj[100], binMask[40];
+            sscanf(line, "T^%[^^]^%[^^]^%[^^]^%[^\n]", start, len, mask, obj);
+            hexToBin(mask, binMask);
+
+            int addr = strtol(start, NULL, 16) + relocation;
+            printf("\nBitmask: %s → %s\n", mask, binMask);
+            printf("Address\t\tObject Code\n");
+
+            for (int i = 0, bit = 0; obj[i]; i += 6, bit++) {
+                if (obj[i] == '^' || !obj[i + 5]) continue;
+                int op, loc;
+                sscanf(&obj[i], "%2x%4x", &op, &loc);
+                if (binMask[bit] == '1') loc += relocation;
+                printf("%04X\t\t%02X%04X\n", addr, op, loc);
+                addr += 3;
+            }
+        }
+
+        else if (line[0] == 'E') printf("\nEnd of program\n");
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+
+object_code.txt
+H^PROG1^002000^00107A
+T^002000^1E^F1^141033^281030^301015^481039^3C1003^$ 
+T^00201E^15^7A^0C1036^4C0000^481061^$ 
+E^002000
