@@ -1,0 +1,107 @@
+#include <stdio.h>
+#include <string.h>
+
+#define MAX 100
+
+typedef struct {
+    char name[MAX];
+    char body[20][MAX];
+    int lines;
+} Macro;
+
+Macro macros[10];
+int macroCount = 0;
+
+// Find macro by name
+int findMacro(char *name) {
+    for (int i = 0; i < macroCount; i++)
+        if (strcmp(macros[i].name, name) == 0)
+            return i;
+    return -1;
+}
+
+// Read macro definition
+void readMacro(FILE *in) {
+    char name[MAX], line[MAX];
+    fscanf(in, "%s", name);        // Macro name
+    fgets(line, MAX, in);          // Skip "MACRO"
+    strcpy(macros[macroCount].name, name);
+
+    int l = 0;
+    while (fgets(line, MAX, in)) {
+        if (strstr(line, "MEND")) break;
+        strcpy(macros[macroCount].body[l++], line);
+    }
+    macros[macroCount++].lines = l;
+}
+
+// Expand macro call
+void expandMacro(FILE *out, int idx, char *argsStr) {
+    char *args[10];
+    int n = 0;
+
+    for (char *t = strtok(argsStr, ","); t; t = strtok(NULL, ",")) {
+        while (*t == ' ') t++;      // Trim spaces
+        args[n++] = t;
+    }
+
+    fprintf(out, ". expanding macro %s\n", macros[idx].name);
+
+    for (int i = 0; i < macros[idx].lines; i++) {
+        char line[MAX * 2];
+        strcpy(line, macros[idx].body[i]);
+
+        for (int j = 0; j < n; j++) {
+            char param[3];
+            sprintf(param, "&%c", 'A' + j);
+
+            char *pos;
+            while ((pos = strstr(line, param))) {
+                char temp[MAX * 2] = "";
+                *pos = '\0';
+                strcat(temp, line);
+                strcat(temp, args[j]);
+                strcat(temp, pos + 2);
+                strcpy(line, temp);
+            }
+        }
+        fprintf(out, "%s", line);
+    }
+}
+
+int main() {
+    FILE *in = fopen("macro.txt", "r");
+    FILE *out = fopen("expanded.txt", "w");
+    char line[MAX], w1[MAX], w2[MAX];
+
+    if (!in) { printf("Error opening file\n"); return 1; }
+
+    while (fgets(line, MAX, in)) {
+        if (line[0] == '\n') continue;
+
+        sscanf(line, "%s %s", w1, w2);
+
+        if (strcmp(w2, "MACRO") == 0)
+            readMacro(in);
+        else if (findMacro(w1) != -1)
+            expandMacro(out, findMacro(w1), w2);
+        else
+            fprintf(out, "%s", line);
+    }
+
+    fclose(in);
+    fclose(out);
+    printf("✅ Macro processing complete! Macros: %d\n", macroCount);
+    return 0;
+}
+
+
+macro.txt
+COPY START 1000
+ONE MACRO &A,&B
+LDA &A
+STA &B
+MEND
+ONE ALPHA,BETA
+ONE BETA,GAMMMA
+END
